@@ -23,22 +23,22 @@ export default function ReceiptDetailPage() {
 
   useEffect(() => {
     if (!id) return;
-  
+
     const receiptId = Array.isArray(id) ? id[0] : id;
-  
+
     const fetchReceipt = async () => {
       setReceipt(null); // 前のデータをクリア
       try {
         const res = await fetch(`/api/receipts?id=${receiptId}`);
+        if (!res.ok) throw new Error('Failed to fetch');
         const data = await res.json();
-        const r = Array.isArray(data) ? data[0] : data;
-        setReceipt({ items: [], ...r });
+        setReceipt(data); // API から取得した単一オブジェクトをセット
       } catch (err) {
         console.error(err);
-        setReceipt({ items: [] } as Receipt);
+        setReceipt(null);
       }
     };
-  
+
     fetchReceipt();
   }, [id]);
 
