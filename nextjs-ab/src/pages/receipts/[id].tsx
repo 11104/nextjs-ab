@@ -1,30 +1,59 @@
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 
+interface Item {
+  name: string;
+  price: string;
+  category: string;
+}
+
+interface Receipt {
+  id: string;
+  storeName: string;
+  date: string;
+  total: number;
+  items: Item[];
+}
+
 export default function ReceiptDetailPage() {
   const router = useRouter();
   const { id } = router.query;
-  const [receipt, setReceipt] = useState<any>(null);
+
+  const [receipt, setReceipt] = useState<Receipt | null>(null);
 
   useEffect(() => {
-    if (id) {
-      fetch(`/api/receipts?id=${id}`)
-        .then((res) => res.json())
-        .then(setReceipt);
-    }
+    if (!id) return;
+  
+    const receiptId = Array.isArray(id) ? id[0] : id;
+  
+    const fetchReceipt = async () => {
+      setReceipt(null); // 前のデータをクリア
+      try {
+        const res = await fetch(`/api/receipts?id=${receiptId}`);
+        const data = await res.json();
+        const r = Array.isArray(data) ? data[0] : data;
+        setReceipt({ items: [], ...r });
+      } catch (err) {
+        console.error(err);
+        setReceipt({ items: [] } as Receipt);
+      }
+    };
+  
+    fetchReceipt();
   }, [id]);
 
-  if (!receipt) return <p>読み込み中...</p>;
+  if (!receipt) return <p className="p-4">読み込み中...</p>;
 
   return (
-    <div className="p-4 space-y-4">
-      <h1 className="text-xl font-bold">{receipt.store}</h1>
+    <div className="p-4 space-y-4 max-w-xl mx-auto">
+      <h1 className="text-xl font-bold">{receipt.storeName}</h1>
       <p className="text-gray-500">{receipt.date}</p>
 
+      <h2 className="text-lg font-semibold">商品明細</h2>
       <ul className="space-y-2">
-        {receipt.items.map((i: any) => (
+        {receipt.items.map((i, index) => (
           <li
-            key={i.id}
+            key={index}
             className="flex justify-between bg-white p-3 rounded-lg shadow"
           >
             <span>
